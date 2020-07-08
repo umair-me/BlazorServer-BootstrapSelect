@@ -1,0 +1,41 @@
+﻿@page "/"
+
+<select class="selectpicker" data-live-search="true">
+    <option data-tokens="ketchup mustard">Hot Dog, Fries and a Soda</option>
+    <option data-tokens="mustard">Burger, Shake and a Smile</option>
+    <option data-tokens="frosting">Sugar, Spice and all things nice</option>
+</select>
+
+@if (!string.IsNullOrEmpty(SelectedValue))
+{
+    <div>
+        <p class="text-success">
+            Selected dropdown value: @SelectedValue
+        </p>
+    </div>
+}
+
+@code {
+    // inject jsruntime to call javascript code
+    [Inject] public IJSRuntime JSRuntime { get; set; }
+
+    // hold the callback selected value
+    public string SelectedValue { get; set; }
+
+    // call the javascript method to init the select picker
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) // only needs to be called once per page render
+        {
+            await JSRuntime.InvokeVoidAsync("InitSelectPicker", DotNetObjectReference.Create(this), "OnSelectedValue", ".selectpicker");
+        }
+    }
+
+    // method which will be triggered by javascript, need to pass the method name 
+    [JSInvokable]
+    public void OnSelectedValue(string val)
+    {
+        SelectedValue = val;
+        StateHasChanged();
+    }
+}
